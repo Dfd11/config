@@ -1,0 +1,159 @@
+# Alacritty Configuration
+# Documentation: https://alacritty.org/config-alacritty.html
+
+# =============================================================================
+# GENERAL SETTINGS
+# =============================================================================
+[general]
+# Import external configuration files (color themes, etc.)
+# Files are loaded in order; later values override earlier ones
+import = ["~/.config/alacritty/github_dark_colorblind.toml"]
+
+# =============================================================================
+# ENVIRONMENT VARIABLES
+# =============================================================================
+[env]
+# Set TERM to xterm-256color for better compatibility with Vim syntax highlighting
+TERM = "xterm-256color"
+
+# =============================================================================
+# COLOR OVERRIDES
+# =============================================================================
+# Override cursor color from imported theme (use blue from palette)
+[colors.cursor]
+cursor = "#58a6ff"
+text = "#0d1117"
+
+# =============================================================================
+# FONT SETTINGS
+# =============================================================================
+[font]
+# Font size in points
+size = 12
+
+[font.normal]
+# Font family name - must be installed on your system
+# Run 'fc-list :spacing=mono family' to see available monospace fonts
+family = "JetBrainsMono Nerd Font"
+style = "Regular"
+
+# =============================================================================
+# WINDOW SETTINGS
+# =============================================================================
+[window]
+# Blank space around terminal content (in pixels)
+# Adds breathing room between text and window edges
+padding = { x = 8, y = 8 }
+
+# Window transparency: 0.0 (fully transparent) to 1.0 (fully opaque)
+# Requires compositor support (e.g., picom, KWin, Mutter)
+opacity = 1.00
+
+# Blur the background behind the transparent window
+# Works on: macOS, KDE Wayland, picom with blur enabled
+# If unsupported, this setting is simply ignored
+blur = true
+
+# Window decorations: "Full" (title bar + borders), "None" (borderless)
+decorations = "Full"
+
+# =============================================================================
+# CURSOR SETTINGS
+# =============================================================================
+[cursor]
+# Disable blink timeout (0 = cursor blinks forever)
+# Default is 5 seconds, after which cursor stops blinking
+blink_timeout = 0
+
+[cursor.style]
+# Cursor shape: "Block", "Beam" (vertical line), or "Underline"
+shape = "Block"
+
+# Cursor blinking: "Never", "Off", "On", or "Always"
+# "On" = blink by default, apps can disable
+# "Always" = always blink, apps cannot disable
+blinking = "Always"
+
+# =============================================================================
+# SCROLLBACK SETTINGS
+# =============================================================================
+[scrolling]
+# Maximum lines stored in scrollback buffer
+# Higher = more history but more memory usage
+# Range: 0 (disabled) to 100000
+history = 10000
+multiplier = 1
+
+# =============================================================================
+# SELECTION SETTINGS
+# =============================================================================
+[selection]
+# When true, selecting text automatically copies it to the clipboard
+# When false, you must use Ctrl+Shift+C to copy
+save_to_clipboard = true
+
+# =============================================================================
+# TERMINAL SETTINGS
+# =============================================================================
+[terminal]
+# Shell program to run when Alacritty starts
+# If unset, uses $SHELL environment variable
+shell = "/bin/bash"
+
+# =============================================================================
+# HINTS (URL DETECTION)
+# =============================================================================
+# Hints allow you to click or select URLs and other patterns in the terminal
+
+[[hints.enabled]]
+# Regex pattern to match URLs (standard URL protocols)
+regex = "(ipfs:|ipns:|magnet:|mailto:|gemini://|gopher://|https://|http://|news:|file:|git://|ssh:|ftp://)[^\\u0000-\\u001F\\u007F-\\u009F<>\"\\s{-}\\^⟨⟩`]+"
+
+# Also match OSC 8 hyperlinks (clickable links from apps)
+hyperlinks = true
+
+# Clean up matches (remove trailing punctuation like periods)
+post_processing = true
+
+# Don't keep hint labels visible after selection
+persist = false
+
+# Command to open URLs (xdg-open uses your default browser)
+command = "xdg-open"
+
+# Mouse behavior: hover over URLs to highlight, click to open
+# mods = "None" means no modifier key required (just click)
+mouse = { enabled = true, mods = "None" }
+
+# =============================================================================
+# KEYBOARD BINDINGS
+# =============================================================================
+# Custom key bindings
+# Format: { key = "KeyName", mods = "Modifier1|Modifier2", action = "ActionName" }
+#
+# Available modifiers: Control, Shift, Alt, Super (Windows key)
+# Combine with | (pipe): "Control|Shift"
+#
+# Common actions:
+#   CreateNewWindow, IncreaseFontSize, DecreaseFontSize, ResetFontSize
+#   ScrollLineUp, ScrollLineDown, ScrollPageUp, ScrollPageDown
+#   Copy, Paste, SearchForward, SearchBackward, ToggleFullscreen
+
+[keyboard]
+bindings = [
+    # Create a new Alacritty window
+    { key = "Return", mods = "Control|Shift", action = "CreateNewWindow" },
+
+    # Font size controls
+    { key = "Plus", mods = "Control", action = "IncreaseFontSize" },
+    { key = "Minus", mods = "Control", action = "DecreaseFontSize" },
+    { key = "0", mods = "Control", action = "ResetFontSize" },
+
+    # Scroll one line at a time (Vi-style: K=up, J=down)
+    { key = "K", mods = "Control|Shift", action = "ScrollLineUp" },
+    { key = "J", mods = "Control|Shift", action = "ScrollLineDown" },
+
+    # Search through terminal scrollback history
+    # Type your search term, use Enter to confirm, Escape to cancel
+    { key = "F", mods = "Control|Shift", action = "SearchForward" },
+]

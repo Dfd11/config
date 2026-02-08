@@ -1,0 +1,30 @@
+#!/bin/bash
+
+#Setup Aliases
+alias ls='ls -l --color=auto'
+alias l='ls -l'
+alias la='ls -al'
+
+#Add neovim appimage into the path file
+export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+export PATH="$PATH:/opt/tree-sitter-linux-x64"
+
+#fzf options
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+export FZF_DEFAULT_OPTS="--style minimal --preview 'fzf-preview.sh {}'"
+
+#For lazyvim, we need to install
+#Neovim
+#Git
+#Nerd Font
+#LazyGit
+#tree-sitter-cli
+#curl
+#fzf-lua
+#fzf
+#ripgrep
+#fd
+#alacritty
+
+#alacritty completion
+source ~/.bash_completion/alacritty

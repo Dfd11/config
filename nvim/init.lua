@@ -1,0 +1,2 @@
+require("sixtailfox")
+print("Hello")
