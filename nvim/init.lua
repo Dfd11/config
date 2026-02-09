@@ -1,2 +1,1 @@
 require("sixtailfox")
-print("Hello")

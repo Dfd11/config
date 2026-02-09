@@ -5,6 +5,9 @@ alias ls='ls -l --color=auto'
 alias l='ls -l'
 alias la='ls -al'
 
+alias vim="nvim"
+
+
 #Add neovim appimage into the path file
 export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 export PATH="$PATH:/opt/tree-sitter-linux-x64"
