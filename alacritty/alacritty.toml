@@ -8,7 +8,6 @@
 # Import external configuration files (color themes, etc.)
 # Files are loaded in order; later values override earlier ones
 import = ["~/.config/alacritty/github_dark_colorblind.toml"]
-
 # =============================================================================
 # ENVIRONMENT VARIABLES
 # =============================================================================
@@ -47,7 +46,7 @@ padding = { x = 8, y = 8 }
 
 # Window transparency: 0.0 (fully transparent) to 1.0 (fully opaque)
 # Requires compositor support (e.g., picom, KWin, Mutter)
-opacity = 1.00
+opacity = 0.70
 
 # Blur the background behind the transparent window
 # Works on: macOS, KDE Wayland, picom with blur enabled
@@ -57,6 +56,7 @@ blur = true
 # Window decorations: "Full" (title bar + borders), "None" (borderless)
 decorations = "Full"
 
+startup_mode = "Maximized"
 # =============================================================================
 # CURSOR SETTINGS
 # =============================================================================
