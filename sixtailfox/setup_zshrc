@@ -2,10 +2,12 @@
 # ==========================================
 # ZSH-SPECIFIC CONFIGURATION
 # ==========================================
-
+#autoload -U colors && colors
 # Advanced Zsh Tab Completion Menu Configuration
 autoload -Uz compinit && compinit
 zstyle ':completion:*' menu select
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 bindkey '^[[Z' reverse-menu-complete # Shift+Tab to cycle backward
+source ~/powerlevel10k/powerlevel10k.zsh-theme
+source ~/.zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

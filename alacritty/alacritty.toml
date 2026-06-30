@@ -11,9 +11,9 @@ import = ["~/.config/alacritty/github_dark_colorblind.toml"]
 # =============================================================================
 # ENVIRONMENT VARIABLES
 # =============================================================================
-#[env]
+[env]
 # Set TERM to xterm-256color for better compatibility with Vim syntax highlighting
-#TERM = "xterm-256color"
+TERM = "xterm-256color"
 
 
 # =============================================================================
@@ -39,7 +39,7 @@ padding = { x = 8, y = 8 }
 
 # Window transparency: 0.0 (fully transparent) to 1.0 (fully opaque)
 # Requires compositor support (e.g., picom, KWin, Mutter)
-opacity = 0.70
+opacity = 0.90
 
 # Blur the background behind the transparent window
 # Works on: macOS, KDE Wayland, picom with blur enabled
