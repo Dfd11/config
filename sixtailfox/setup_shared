@@ -1,0 +1,44 @@
+# ==========================================
+# SHARED BASE CONFIGURATION (Bash & Zsh)
+# ==========================================
+
+# Setup Aliases
+alias ls='ls -l --color=auto'
+alias l='ls -l'
+alias la='ls -al'
+alias vim="nvim"
+
+# Global System Paths
+export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+export PATH="$PATH:/opt/tree-sitter-linux-x64"
+export PATH="$HOME/.local/bin:$PATH"
+
+# FZF Global Options
+export FZF_DEFAULT_OPTS="--style minimal --preview 'fzf-preview.sh {}'"
+
+# Setup fzf
+# ---------
+if [[ ! "$PATH" == */home/david/.fzf/bin* ]]; then
+  PATH="${PATH:+${PATH}:}/home/david/.fzf/bin"
+fi
+
+
+if [ -n "$BASH_VERSION" ]; then
+  #echo "Running in Bash (Version: $BASH_VERSION)"
+  eval "$(fzf --bash)"
+  # Alacritty Bash completions
+  [ -f ~/.config/bash_completion/alacritty ] && source ~/.config/bash_completion/alacritty
+
+elif [ -n "$ZSH_VERSION" ]; then
+  #echo "Running in Zsh (Version: $ZSH_VERSION)"
+  eval "$(fzf --zsh)"
+  # Set a dynamic path for Zsh functions using $HOME
+  zsh_funcs="${ZDOTDIR:-$HOME}/.config/zsh_functions"
+  
+  # Dynamic array check and insertion
+  if [[ ! " ${fpath[@]} " =~ " $zsh_funcs " ]]; then
+    fpath+=("$zsh_funcs")
+  fi
+fi
+
+

@@ -11,17 +11,10 @@ import = ["~/.config/alacritty/github_dark_colorblind.toml"]
 # =============================================================================
 # ENVIRONMENT VARIABLES
 # =============================================================================
-[env]
+#[env]
 # Set TERM to xterm-256color for better compatibility with Vim syntax highlighting
-TERM = "xterm-256color"
+#TERM = "xterm-256color"
 
-# =============================================================================
-# COLOR OVERRIDES
-# =============================================================================
-# Override cursor color from imported theme (use blue from palette)
-[colors.cursor]
-cursor = "#58a6ff"
-text = "#0d1117"
 
 # =============================================================================
 # FONT SETTINGS
@@ -98,7 +91,12 @@ save_to_clipboard = true
 [terminal]
 # Shell program to run when Alacritty starts
 # If unset, uses $SHELL environment variable
-shell = "/bin/bash"
+
+#This option for bash
+#shell = "/bin/bash"
+
+#This option for zsh
+shell = "/usr/bin/zsh"
 
 # =============================================================================
 # HINTS (URL DETECTION)
