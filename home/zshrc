@@ -1,0 +1,102 @@
+#!/bin/zsh
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# =============================================================================
+# 1. HISTORY SETTINGS
+# =============================================================================
+# Zsh uses different variables and 'setopt' instead of 'shopt'
+HISTFILE=~/.zsh_history
+HISTSIZE=1000
+SAVEHIST=2000
+
+# Append to history file (don't overwrite) and ignore duplicates
+setopt append_history
+setopt hist_ignore_all_dups
+setopt hist_ignore_space
+
+# =============================================================================
+# 2. GENERAL SETTINGS
+# =============================================================================
+# Make less more friendly for non-text input files
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# Set variable identifying the chroot you work in
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+  debian_chroot=$(cat /etc/debian_chroot)
+fi
+
+# =============================================================================
+# 3. PROMPT & WINDOW TITLE
+# =============================================================================
+# Zsh uses %F{color} and %f to start/stop colors, which is much cleaner 
+# than Bash's \[\033[...\] escape sequences.
+# %n = username, %m = hostname, %~ = current directory
+
+# Enable prompt substitution (allows variables like $debian_chroot to be evaluated)
+#setopt prompt_subst
+#
+## The colored prompt: Green user@host, Blue directory
+#PROMPT='${debian_chroot:+($debian_chroot)}%F{green}%n@%m%f:%F{blue}%~%f$ '
+#
+## If this is an xterm, set the terminal title using a Zsh precmd hook
+#case "$TERM" in
+#  xterm*|rxvt*)
+#    # precmd runs right before the prompt is drawn
+#    precmd() { print -Pn "\e]0;${debian_chroot:+($debian_chroot)}%n@%m: %~\a" }
+#    ;;
+#esac
+
+# =============================================================================
+# 4. COLORS & ALIASES
+# =============================================================================
+# Enable color support of ls and add aliases (Fully compatible with Bash)
+if [ -x /usr/bin/dircolors ]; then
+  test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+  
+  alias ls='ls --color=auto'
+  alias grep='grep --color=auto'
+  alias fgrep='fgrep --color=auto'
+  alias egrep='egrep --color=auto'
+fi
+
+# Standard file listing aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Long-running command alert alias
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+# Source external aliases file (Changed from .bash_aliases to .zsh_aliases for consistency, 
+# but you can rename it back to .bash_aliases if you share the file between shells).
+if [ -f ~/.zsh_aliases ]; then
+  . ~/.zsh_aliases
+fi
+
+# =============================================================================
+# 5. AUTOCOMPLETION
+# =============================================================================
+# Bash completion scripts (/etc/bash_completion) DO NOT work in Zsh.
+# Zsh has its own, much more powerful completion system called 'compinit'.
+
+autoload -Uz compinit
+compinit
+
+# Load the Shared Base
+source ~/.config/sixtailfox/setup_shared
+source ~/.config/sixtailfox/setup_zshrc
+
+# Load the Core System Secrets/Configs
+[ -f ~/.company_config ] && source ~/.company_config
+[ -f ~/.bashrc.secrets ] && source ~/.bashrc.secrets
+
+# Cargo / Rust environment setup
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh

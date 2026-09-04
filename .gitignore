@@ -1,1 +1,35 @@
+# This repo IS ~/.config, so ignore everything by default and whitelist
+# only the things that are actually part of the dotfiles setup.
+*
+!*/
 
+!.gitignore
+!README.md
+
+# Editor
+!nvim/**
+nvim.bak/
+
+# Terminal
+!alacritty/**
+alacritty/Alacritty.html
+alacritty/Alacritty_files/
+!bash_completion/alacritty
+
+# Git
+!git/ignore
+
+# Container / daemon settings
+!docker/daemon.json
+
+# Shell
+!sixtailfox/**
+!zsh_functions/**
+
+# Dotfiles that live in $HOME, symlinked in by sixtailfox/setup.sh
+!home/**
+
+# Cloned by the installer, not vendored here
+fzf-tab/
+zsh-autosuggestions/
+zsh-completions/

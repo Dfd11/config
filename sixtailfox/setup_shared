@@ -12,9 +12,6 @@ alias vim="nvim"
 if [[ ! "$PATH" == */opt/nvim-linux-x86_64/bin* ]]; then
   export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 fi
-if [[ ! "$PATH" == */opt/tree-sitter-linux-x64* ]]; then
-  export PATH="$PATH:/opt/tree-sitter-linux-x64"
-fi
 
 if [[ ! "$PATH" == *"$HOME/.local/bin"* ]]; then
   export PATH="$HOME/.local/bin:$PATH"
@@ -25,8 +22,8 @@ export FZF_DEFAULT_OPTS="--style minimal --preview 'fzf-preview.sh {}'"
 
 # Setup fzf
 # ---------
-if [[ ! "$PATH" == */home/david/.fzf/bin* ]]; then
-  PATH="${PATH:+${PATH}:}/home/david/.fzf/bin"
+if [[ ! "$PATH" == *$HOME/.fzf/bin* ]]; then
+  PATH="${PATH:+${PATH}:}$HOME/.fzf/bin"
 fi
 
 
