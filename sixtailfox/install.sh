@@ -18,7 +18,7 @@ fi
 rows="$("$SETUP" --list | column -t -s $'\t')"
 
 selection="$(printf '%s\n' "$rows" | "$fzf_bin" \
-  --multi --cycle \
+  --multi --cycle --no-preview \
   --prompt='install> ' \
   --header='TAB select, TAB again to deselect, ENTER to confirm, ESC to cancel' \
   --header-first)"
