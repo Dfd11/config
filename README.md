@@ -18,7 +18,7 @@ The script is idempotent — re-run it any time.
 |-------------------|---------------------------------------------------------|
 | `nvim/`           | LazyVim config (plugins in `nvim/lua/plugins/`)          |
 | `alacritty/`      | terminal config + github-dark themes                     |
-| `sixtailfox/`     | shell setup: `setup.sh` installer, `setup_shared` (bash+zsh), `setup_zshrc`, `setup_bashrc` |
+| `sixtailfox/`     | shell setup: `setup.sh` installer, `setup_shared` (bash+zsh), `setup_zshrc`, `setup_bashrc`, `MANUAL.md` (post-install manual steps) |
 | `home/`           | dotfiles that must live in `$HOME`; symlinked by the installer |
 | `zsh_functions/`  | zsh completion functions                                 |
 

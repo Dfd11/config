@@ -244,16 +244,5 @@ nvim --headless \
   +qa || warn "mason install reported errors"
 fi
 
-cat <<'DONE'
-
-Done. Remaining manual bits:
-  * Log out / back in (default shell + docker group).
-  * Set the terminal font to "MesloLGS NF".
-  * gh auth login   /   gcloud auth login
-  * Machine-local secrets are NOT in this repo - create if you need them:
-      ~/.company_config
-      ~/.bashrc.secrets
-
-Not scripted (licensed / machine-specific): MATLAB, Wolfram, CUDA, NVIDIA
-drivers, Foxglove, Obsidian, CrowdStrike, cursor-agent, claude.
-DONE
+info "done - remaining manual steps:"
+cat "$CONFIG/sixtailfox/MANUAL.md"
