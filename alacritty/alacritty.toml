@@ -154,4 +154,7 @@ bindings = [
     # Search through terminal scrollback history
     # Type your search term, use Enter to confirm, Escape to cancel
     { key = "F", mods = "Control|Shift", action = "SearchForward" },
+
+    # Shift+Enter sends ESC+CR (multiline input in TUIs like Claude Code)
+    { key = "Return", mods = "Shift", chars = "\u001B\r" },
 ]
