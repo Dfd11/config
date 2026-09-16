@@ -12,6 +12,7 @@ CONFIG="$HOME/.config"
 NVIM_VERSION="v0.11.2"
 GO_VERSION="1.26.4"
 LAZYGIT_VERSION="0.59.0"
+NERD_FONTS_VERSION="v3.4.0"
 
 info() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m %s\n' "$*"; }
@@ -182,6 +183,31 @@ if ! have alacritty; then
   export PATH="$HOME/.cargo/bin:$PATH"
   cargo install --git https://github.com/alacritty/alacritty.git --locked alacritty
   sudo install "$HOME/.cargo/bin/alacritty" /usr/local/bin/
+fi
+
+if [ ! -f /usr/share/applications/Alacritty.desktop ]; then
+  info "installing alacritty desktop entry"
+  tmp="$(mktemp -d)"
+  curl -fsSL -o "$tmp/Alacritty.desktop" \
+    "https://raw.githubusercontent.com/alacritty/alacritty/master/extra/linux/Alacritty.desktop"
+  sudo install -Dm644 "$tmp/Alacritty.desktop" /usr/share/applications/Alacritty.desktop
+  sudo mkdir -p /usr/share/pixmaps
+  curl -fsSL -o "$tmp/Alacritty.svg" \
+    "https://raw.githubusercontent.com/alacritty/alacritty/master/extra/logo/alacritty-term.svg"
+  sudo install -Dm644 "$tmp/Alacritty.svg" /usr/share/pixmaps/Alacritty.svg
+  rm -rf "$tmp"
+  have update-desktop-database && sudo update-desktop-database -q
+fi
+
+if [ ! -d "$HOME/.local/share/fonts/JetBrainsMonoNF" ]; then
+  info "installing JetBrainsMono Nerd Font (alacritty.toml's font.normal.family)"
+  mkdir -p "$HOME/.local/share/fonts/JetBrainsMonoNF"
+  tmp="$(mktemp -d)"
+  curl -fsSL -o "$tmp/JetBrainsMono.zip" \
+    "https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_FONTS_VERSION}/JetBrainsMono.zip"
+  unzip -qo "$tmp/JetBrainsMono.zip" -d "$HOME/.local/share/fonts/JetBrainsMonoNF"
+  rm -rf "$tmp"
+  fc-cache -f >/dev/null
 fi
 fi
 

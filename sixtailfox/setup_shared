@@ -23,7 +23,7 @@ export FZF_DEFAULT_OPTS="--style minimal --preview 'fzf-preview.sh {}'"
 # Setup fzf
 # ---------
 if [[ ! "$PATH" == *$HOME/.fzf/bin* ]]; then
-  PATH="${PATH:+${PATH}:}$HOME/.fzf/bin"
+  PATH="$HOME/.fzf/bin${PATH:+:${PATH}}"
 fi
 
 
