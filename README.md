@@ -7,7 +7,8 @@ This repo *is* `~/.config`. Everything not part of the setup is ignored by
 
 ```sh
 git clone <this-repo> ~/.config   # or into a temp dir and rsync over ~/.config
-~/.config/sixtailfox/setup.sh
+~/.config/sixtailfox/setup.sh          # everything
+~/.config/sixtailfox/install.sh        # interactive checklist instead
 ```
 
 The script is idempotent — re-run it any time.
@@ -18,7 +19,7 @@ The script is idempotent — re-run it any time.
 |-------------------|---------------------------------------------------------|
 | `nvim/`           | LazyVim config (plugins in `nvim/lua/plugins/`)          |
 | `alacritty/`      | terminal config + github-dark themes                     |
-| `sixtailfox/`     | shell setup: `setup.sh` installer, `setup_shared` (bash+zsh), `setup_zshrc`, `setup_bashrc`, `MANUAL.md` (post-install manual steps) |
+| `sixtailfox/`     | shell setup: `setup.sh` installer, `install.sh` (interactive checklist), `setup_shared` (bash+zsh), `setup_zshrc`, `setup_bashrc`, `MANUAL.md` (post-install manual steps) |
 | `home/`           | dotfiles that must live in `$HOME`; symlinked by the installer |
 | `zsh_functions/`  | zsh completion functions                                 |
 

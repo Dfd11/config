@@ -36,4 +36,4 @@ touch ~/.company_config ~/.bashrc.secrets
 ## Not scripted at all
 
 Licensed / machine-specific, install by hand: MATLAB, Wolfram, CUDA, NVIDIA
-drivers, Foxglove, Obsidian, CrowdStrike, cursor-agent, claude.
+drivers, Foxglove, CrowdStrike, cursor-agent, claude.

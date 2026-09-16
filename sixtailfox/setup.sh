@@ -3,7 +3,9 @@
 #
 #   git clone <repo> ~/.config
 #   ~/.config/sixtailfox/setup.sh            # everything
-#   ~/.config/sixtailfox/setup.sh shell nvim # only some stages
+#   ~/.config/sixtailfox/setup.sh shell nvim # only some stages (deps auto-included)
+#   ~/.config/sixtailfox/install.sh          # interactive checklist (whiptail)
+#   ~/.config/sixtailfox/setup.sh --list     # print id<TAB>description per stage
 #
 # Idempotent: safe to re-run. Skips anything already installed.
 set -euo pipefail
@@ -18,8 +20,61 @@ info() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m %s\n' "$*"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# Catalog of selectable stages, in execution order, with the dependencies
+# each one needs auto-included when picked on its own (e.g. picking just
+# "nvim" also pulls in "apt" for curl/tar/npm).
+STAGE_ORDER=(apt nvim lang cli term shell plugins spotify obsidian)
+declare -A STAGE_DESC=(
+  [apt]="Base apt packages (build tools, ripgrep, fzf deps, clipboard, fonts)"
+  [nvim]="Neovim (LazyVim-ready build) + tree-sitter CLI"
+  [lang]="Go and Rust toolchains + Go dev tools (gopls, dlv, ...)"
+  [cli]="Dev CLI tools: lazygit, gh, docker, gcloud"
+  [term]="Alacritty terminal + desktop entry + font + GNOME shortcut"
+  [shell]="zsh plugins, powerlevel10k prompt, tmux, fzf, dotfile symlinks"
+  [plugins]="LazyVim plugins + Mason LSP/formatter packages"
+  [spotify]="Spotify (snap)"
+  [obsidian]="Obsidian (snap)"
+)
+declare -A STAGE_DEPS=(
+  [nvim]="apt"
+  [lang]="apt"
+  [cli]="apt"
+  [term]="apt lang"
+  [shell]="apt"
+  [plugins]="apt nvim lang"
+)
+
+if [ "${1:-}" = "--list" ]; then
+  for s in "${STAGE_ORDER[@]}"; do
+    printf '%s\t%s\n' "$s" "${STAGE_DESC[$s]}"
+  done
+  exit 0
+fi
+
+# Expand a requested stage list to include its transitive dependencies.
+resolve_stages() {
+  local -A seen=()
+  local queue=("$@") s d
+  while [ ${#queue[@]} -gt 0 ]; do
+    s="${queue[0]}"; queue=("${queue[@]:1}")
+    [ -n "${seen[$s]:-}" ] && continue
+    seen[$s]=1
+    for d in ${STAGE_DEPS[$s]:-}; do
+      [ -z "${seen[$d]:-}" ] && queue+=("$d")
+    done
+  done
+  local out=()
+  for s in "${STAGE_ORDER[@]}"; do
+    [ -n "${seen[$s]:-}" ] && out+=("$s")
+  done
+  printf '%s\n' "${out[@]}"
+}
+
 # Run stage $1 only if it was requested (no args = all stages).
 STAGES=("$@")
+if [ ${#STAGES[@]} -gt 0 ]; then
+  mapfile -t STAGES < <(resolve_stages "${STAGES[@]}")
+fi
 want() {
   [ ${#STAGES[@]} -eq 0 ] && return 0
   local s; for s in "${STAGES[@]}"; do [ "$s" = "$1" ] && return 0; done
@@ -296,6 +351,27 @@ nvim --headless \
   "+Lazy! load mason.nvim" \
   "+MasonInstall gopls goimports gofumpt golangci-lint lua-language-server stylua shfmt" \
   +qa || warn "mason install reported errors"
+fi
+
+# ==============================================================================
+# spotify / obsidian - desktop apps via snap
+# ==============================================================================
+if want spotify; then
+if ! have snap; then
+  warn "snap not available - install spotify manually"
+elif ! snap list spotify >/dev/null 2>&1; then
+  info "installing spotify (snap)"
+  sudo snap install spotify
+fi
+fi
+
+if want obsidian; then
+if ! have snap; then
+  warn "snap not available - install obsidian manually"
+elif ! snap list obsidian >/dev/null 2>&1; then
+  info "installing obsidian (snap)"
+  sudo snap install obsidian
+fi
 fi
 
 info "done - remaining manual steps:"
