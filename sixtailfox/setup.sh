@@ -266,6 +266,7 @@ nvim --headless "+Lazy! sync" +qa || warn "lazy sync reported errors"
 # will NOT come back on their own.
 info "installing Mason packages"
 nvim --headless \
+  "+Lazy! load mason.nvim" \
   "+MasonInstall gopls goimports gofumpt golangci-lint lua-language-server stylua shfmt" \
   +qa || warn "mason install reported errors"
 fi
