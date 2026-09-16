@@ -209,6 +209,33 @@ if [ ! -d "$HOME/.local/share/fonts/JetBrainsMonoNF" ]; then
   rm -rf "$tmp"
   fc-cache -f >/dev/null
 fi
+
+if have gsettings && [[ "${XDG_CURRENT_DESKTOP:-}" == *GNOME* ]]; then
+  MK=org.gnome.settings-daemon.plugins.media-keys
+  KB_BASE=/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+
+  mapfile -t kb_paths < <(gsettings get "$MK" custom-keybindings | grep -o "'[^']*'" | tr -d "'")
+
+  bound=0
+  for p in "${kb_paths[@]}"; do
+    name="$(gsettings get "$MK.custom-keybinding:$p" name 2>/dev/null | tr -d "'")"
+    [ "$name" = "Alacritty" ] && bound=1 && break
+  done
+
+  if [ "$bound" -eq 0 ]; then
+    info "binding Ctrl+Shift+Enter to alacritty (gnome custom shortcut)"
+    n=0
+    while [[ " ${kb_paths[*]} " == *"custom$n/"* ]]; do n=$((n + 1)); done
+    new_path="$KB_BASE/custom$n/"
+    existing=""
+    [ ${#kb_paths[@]} -gt 0 ] && existing="$(printf "'%s', " "${kb_paths[@]}")"
+    new_list="[${existing}'$new_path']"
+    gsettings set "$MK" custom-keybindings "$new_list"
+    gsettings set "$MK.custom-keybinding:$new_path" name "Alacritty"
+    gsettings set "$MK.custom-keybinding:$new_path" command "alacritty"
+    gsettings set "$MK.custom-keybinding:$new_path" binding "<Primary><Shift>Return"
+  fi
+fi
 fi
 
 # ==============================================================================
