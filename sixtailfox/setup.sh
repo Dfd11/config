@@ -33,7 +33,7 @@ declare -A STAGE_DESC=(
   [shell]="zsh plugins, powerlevel10k prompt, tmux, fzf, dotfile symlinks"
   [plugins]="LazyVim plugins + Mason LSP/formatter packages"
   [spotify]="Spotify (snap)"
-  [obsidian]="Obsidian (snap)"
+  [obsidian]="Obsidian (.deb, latest github release)"
 )
 declare -A STAGE_DEPS=(
   [nvim]="apt"
@@ -42,6 +42,7 @@ declare -A STAGE_DEPS=(
   [term]="apt lang"
   [shell]="apt"
   [plugins]="apt nvim lang"
+  [obsidian]="apt"
 )
 
 if [ "${1:-}" = "--list" ]; then
@@ -354,7 +355,7 @@ nvim --headless \
 fi
 
 # ==============================================================================
-# spotify / obsidian - desktop apps via snap
+# spotify / obsidian - desktop apps
 # ==============================================================================
 if want spotify; then
 if ! have snap; then
@@ -366,11 +367,18 @@ fi
 fi
 
 if want obsidian; then
-if ! have snap; then
-  warn "snap not available - install obsidian manually"
-elif ! snap list obsidian >/dev/null 2>&1; then
-  info "installing obsidian (snap)"
-  sudo snap install obsidian
+if ! have obsidian; then
+  info "installing obsidian (.deb, latest github release)"
+  # GitHub's /releases/latest is sometimes a mobile-only patch with no .deb
+  # asset (e.g. a bare .apk release) - scan for the newest release that
+  # actually ships a desktop build instead of trusting "latest".
+  deb_url="$(curl -fsSL "https://api.github.com/repos/obsidianmd/obsidian-releases/releases?per_page=10" \
+    | jq -r '[.[] | select(any(.assets[].name; test("amd64\\.deb$")))][0].assets[]
+             | select(.name | test("amd64\\.deb$")) | .browser_download_url')"
+  tmp="$(mktemp -d)"
+  curl -fsSL -o "$tmp/obsidian.deb" "$deb_url"
+  sudo apt-get install -y "$tmp/obsidian.deb"
+  rm -rf "$tmp"
 fi
 fi
 
