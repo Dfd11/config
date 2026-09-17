@@ -30,4 +30,24 @@ while IFS= read -r line; do
   stages+=("${line%% *}")
 done <<<"$selection"
 
-exec "$SETUP" "${stages[@]}"
+extra_args=()
+for s in "${stages[@]}"; do
+  if [ "$s" = "vscode" ]; then
+    ext_rows="$("$SETUP" --list-vscode-ext | column -t -s $'\t')"
+    ext_selection="$(printf '%s\n' "$ext_rows" | "$fzf_bin" \
+      --multi --cycle --no-preview \
+      --prompt='vscode ext> ' \
+      --header='TAB select, ENTER to confirm - none selected keeps defaults (markdown, python, github)' \
+      --header-first)"
+    if [ -n "$ext_selection" ]; then
+      ext_groups=()
+      while IFS= read -r line; do
+        ext_groups+=("${line%% *}")
+      done <<<"$ext_selection"
+      extra_args+=("--vscode-ext=$(IFS=,; echo "${ext_groups[*]}")")
+    fi
+    break
+  fi
+done
+
+exec "$SETUP" "${stages[@]}" "${extra_args[@]}"

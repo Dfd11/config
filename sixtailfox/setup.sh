@@ -6,6 +6,9 @@
 #   ~/.config/sixtailfox/setup.sh shell nvim # only some stages (deps auto-included)
 #   ~/.config/sixtailfox/install.sh          # interactive checklist (whiptail)
 #   ~/.config/sixtailfox/setup.sh --list     # print id<TAB>description per stage
+#   ~/.config/sixtailfox/setup.sh vscode --vscode-ext=markdown,python,github
+#                                             # vscode extension groups (default: markdown,python,github)
+#   ~/.config/sixtailfox/setup.sh --list-vscode-ext  # print id<TAB>description per group
 #
 # Idempotent: safe to re-run. Skips anything already installed.
 set -euo pipefail
@@ -23,7 +26,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 # Catalog of selectable stages, in execution order, with the dependencies
 # each one needs auto-included when picked on its own (e.g. picking just
 # "nvim" also pulls in "apt" for curl/tar/npm).
-STAGE_ORDER=(apt nvim lang cli term shell plugins spotify obsidian)
+STAGE_ORDER=(apt nvim lang cli term shell plugins spotify obsidian vscode)
 declare -A STAGE_DESC=(
   [apt]="Base apt packages (build tools, ripgrep, fzf deps, clipboard, fonts)"
   [nvim]="Neovim (LazyVim-ready build) + tree-sitter CLI"
@@ -34,6 +37,7 @@ declare -A STAGE_DESC=(
   [plugins]="LazyVim plugins + Mason LSP/formatter packages"
   [spotify]="Spotify (snap)"
   [obsidian]="Obsidian (.deb, latest github release)"
+  [vscode]="VS Code (apt repo, Microsoft's official build)"
 )
 declare -A STAGE_DEPS=(
   [nvim]="apt"
@@ -43,7 +47,29 @@ declare -A STAGE_DEPS=(
   [shell]="apt"
   [plugins]="apt nvim lang"
   [obsidian]="apt"
+  [vscode]="apt"
 )
+
+# VS Code extension groups, selectable independently of stages via
+# --vscode-ext=a,b,c (install.sh offers these as a second checklist).
+VSCODE_EXT_ORDER=(markdown python github go claude themes)
+declare -A VSCODE_EXT_DESC=(
+  [markdown]="Markdown editing (markdown-all-in-one)"
+  [python]="Python + Jupyter (pylance, debugpy, jupyter, ...)"
+  [github]="GitHub pull requests"
+  [go]="Go (golang.go)"
+  [claude]="Claude Code"
+  [themes]="Aura Spirit Dracula theme"
+)
+declare -A VSCODE_EXT_PKGS=(
+  [markdown]="yzhang.markdown-all-in-one"
+  [python]="ms-python.python ms-python.debugpy ms-python.vscode-pylance ms-python.vscode-python-envs ms-toolsai.jupyter ms-toolsai.jupyter-keymap ms-toolsai.jupyter-renderers ms-toolsai.vscode-jupyter-cell-tags ms-toolsai.vscode-jupyter-slideshow"
+  [github]="github.vscode-pull-request-github"
+  [go]="golang.go"
+  [claude]="anthropic.claude-code"
+  [themes]="josemurilloc.aura-spirit-dracula"
+)
+DEFAULT_VSCODE_EXT_GROUPS="markdown python github"
 
 if [ "${1:-}" = "--list" ]; then
   for s in "${STAGE_ORDER[@]}"; do
@@ -51,6 +77,24 @@ if [ "${1:-}" = "--list" ]; then
   done
   exit 0
 fi
+
+if [ "${1:-}" = "--list-vscode-ext" ]; then
+  for e in "${VSCODE_EXT_ORDER[@]}"; do
+    printf '%s\t%s\n' "$e" "${VSCODE_EXT_DESC[$e]}"
+  done
+  exit 0
+fi
+
+# Pull --vscode-ext=... out of the args before the rest are treated as stages.
+VSCODE_EXT_GROUPS="$DEFAULT_VSCODE_EXT_GROUPS"
+args=()
+for a in "$@"; do
+  case "$a" in
+    --vscode-ext=*) VSCODE_EXT_GROUPS="${a#--vscode-ext=}"; VSCODE_EXT_GROUPS="${VSCODE_EXT_GROUPS//,/ }" ;;
+    *) args+=("$a") ;;
+  esac
+done
+set -- "${args[@]}"
 
 # Expand a requested stage list to include its transitive dependencies.
 resolve_stages() {
@@ -379,6 +423,52 @@ if ! have obsidian; then
   curl -fsSL -o "$tmp/obsidian.deb" "$deb_url"
   sudo apt-get install -y "$tmp/obsidian.deb"
   rm -rf "$tmp"
+fi
+fi
+
+if want vscode; then
+if ! have code; then
+  info "installing vscode (apt repo)"
+  sudo install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
+    | gpg --dearmor \
+    | sudo tee /etc/apt/keyrings/packages.microsoft.gpg >/dev/null
+  echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" \
+    | sudo tee /etc/apt/sources.list.d/vscode.list >/dev/null
+  sudo apt-get update -qq && sudo apt-get install -y code
+fi
+
+info "installing vscode extensions: $VSCODE_EXT_GROUPS"
+for g in $VSCODE_EXT_GROUPS; do
+  for ext in ${VSCODE_EXT_PKGS[$g]:-}; do
+    code --install-extension "$ext" --force
+  done
+done
+
+# Match the editor font to alacritty's (alacritty/alacritty.toml) instead of
+# hardcoding it, so the two stay in sync.
+alacritty_family="$(awk -F'"' '/^family = /{print $2; exit}' "$CONFIG/alacritty/alacritty.toml")"
+alacritty_size="$(awk -F'= ' '/^size = /{print $2; exit}' "$CONFIG/alacritty/alacritty.toml")"
+
+mkdir -p "$HOME/.config/Code/User"
+settings="$HOME/.config/Code/User/settings.json"
+if have jq && [ -f "$settings" ]; then
+  tmp="$(mktemp)"
+  jq --arg family "$alacritty_family" --argjson size "$alacritty_size" \
+    '.claudeCode.useTerminal = true
+     | .["workbench.colorTheme"] //= "Visual Studio Dark"
+     | .["editor.fontFamily"] = $family
+     | .["editor.fontSize"] = $size' \
+    "$settings" > "$tmp" && mv "$tmp" "$settings"
+else
+  cat > "$settings" <<EOF
+{
+  "claudeCode.useTerminal": true,
+  "workbench.colorTheme": "Visual Studio Dark",
+  "editor.fontFamily": "$alacritty_family",
+  "editor.fontSize": $alacritty_size
+}
+EOF
 fi
 fi
 
