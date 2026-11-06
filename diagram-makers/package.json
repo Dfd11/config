@@ -1,0 +1,8 @@
+{
+  "name": "diagram-makers",
+  "private": true,
+  "description": "mermaid-cli for the diagram makers",
+  "dependencies": {
+    "@mermaid-js/mermaid-cli": "^12.0.0"
+  }
+}

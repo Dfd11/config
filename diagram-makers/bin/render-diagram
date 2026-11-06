@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Render a Mermaid or SVG source file to a PNG.
+#
+#   render-diagram mermaid|svg <source-file> [--save <name>] [--out <folder>]
+#
+# Without --save: renders a small preview PNG next to the source and prints `preview: <png>`
+# (look at it with an image viewer or the Read tool).
+# With --save: renders at full resolution and publishes <name>.png plus the source (<name>.mmd or
+# <name>.svg) into the output folder (./diagrams by default; --out or $DIAGRAM_OUT to change).
+# Re-using a name replaces the earlier files. Prints filename:, path:, source:, replaced:.
+#
+# Environment:
+#   CHROME  Chrome or Chromium binary for mermaid (default: found on PATH)
+set -euo pipefail
+# shellcheck source=_common.sh
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/_common.sh"
+
+usage() { sed -n '2,/^set -e/p' "$(readlink -f "${BASH_SOURCE[0]}")" | sed '$d; s/^# \{0,1\}//'; }
+parse_flags "$@"
+kind="${POSITIONAL[0]:-}"; src="${POSITIONAL[1]:-}"
+if [[ ( "$kind" != "mermaid" && "$kind" != "svg" ) || -z "$src" || ! -f "$src" ]]; then
+  echo "usage: render-diagram mermaid|svg <source-file> [--save <name>] [--out <folder>]" >&2
+  exit 2
+fi
+
+find_chrome() {
+  local c
+  [[ -n "${CHROME:-}" ]] && { echo "$CHROME"; return; }
+  for c in google-chrome google-chrome-stable chromium chromium-browser; do
+    command -v "$c" && return
+  done
+  return 1
+}
+
+out="${src%.*}-$(date +%s%N).png"
+# previews are small (cheaper to look at); published diagrams are full resolution
+scale=1; density=96; [[ -n "$SLUG" ]] && { scale=2; density=192; }
+
+if [[ "$kind" == "mermaid" ]]; then
+  chrome="$(find_chrome)" || die "Mermaid needs Chrome or Chromium and none was found.
+Install Google Chrome (https://www.google.com/chrome/) or Chromium, or set CHROME=/path/to/chrome."
+  mmdc="$ENV_DIR/node_modules/.bin/mmdc"
+  [[ -x "$mmdc" ]] || die "mermaid-cli is not installed in $ENV_DIR. Run the diagram-makers setup (setup.sh)."
+  cfg="$(mktemp --suffix=.json)"
+  printf '{"executablePath":"%s","args":["--no-sandbox"]}' "$chrome" > "$cfg"
+  PUPPETEER_SKIP_DOWNLOAD=1 "$mmdc" -i "$src" -o "$out" -p "$cfg" -s "$scale" -b white >&2
+  rm -f "$cfg"
+elif command -v rsvg-convert >/dev/null; then
+  rsvg-convert -z "$scale" "$src" -o "$out"
+elif command -v convert >/dev/null; then
+  convert -density "$density" -background white "$src" "$out"
+else
+  die "No SVG renderer found. Install librsvg2-bin (rsvg-convert) or imagemagick."
+fi
+
+[[ -s "$out" ]] || die "render failed: no image produced"
+
+if [[ -n "$SLUG" ]]; then
+  ext="mmd"; [[ "$kind" == "svg" ]] && ext="svg"
+  publish "$SLUG" "$out" png "$src" "$ext"
+else
+  echo "preview: $out"
+fi

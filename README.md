@@ -22,6 +22,7 @@ The script is idempotent — re-run it any time.
 | `sixtailfox/`     | shell setup: `setup.sh` installer, `install.sh` (interactive checklist), `setup_shared` (bash+zsh), `setup_zshrc`, `setup_bashrc`, `MANUAL.md` (post-install manual steps) |
 | `home/`           | dotfiles that must live in `$HOME`; symlinked by the installer |
 | `zsh_functions/`  | zsh completion functions                                 |
+| `diagram-makers/` | Claude Code agents + skill + `render-*` commands that draw diagrams for docs (mermaid, matplotlib, svg, manim); picked from the install menu (*diagrams*), see its own `README.md` |
 
 ## Not in the repo
 

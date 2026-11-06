@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Render a Manim scene to a video and a contact sheet of frames to inspect.
+#
+#   render-manim <script.py> <SceneClass> [--save <name>] [--out <folder>]
+#   render-manim --kit           print the helper library docs and where its examples are
+#
+# Without --save: low-quality preview (480p15). Prints:
+#   video:    <mp4>
+#   frames:   <png contact sheet, 8 evenly spaced frames; look at it to check the animation>
+#   duration: <seconds>
+# With --save: renders at 720p30 and publishes <name>.mp4 plus the script (<name>.scene.py) into the
+# output folder (./diagrams by default; --out or $DIAGRAM_OUT to change). Re-using a name replaces
+# the earlier files. Also prints filename:, path:, source:, replaced:.
+set -euo pipefail
+# shellcheck source=_common.sh
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/_common.sh"
+
+usage() { sed -n '2,/^set -e/p' "$(readlink -f "${BASH_SOURCE[0]}")" | sed '$d; s/^# \{0,1\}//'; }
+parse_flags "$@"
+if [[ "$KIT" == 1 ]]; then print_kit "$TOOLS_DIR/kit"; exit 0; fi
+script="${POSITIONAL[0]:-}"; scene="${POSITIONAL[1]:-}"
+if [[ -z "$script" || ! -f "$script" || -z "$scene" ]]; then
+  echo "usage: render-manim <script.py> <SceneClass> [--save <name>] [--out <folder>]" >&2
+  exit 2
+fi
+for tool in ffmpeg ffprobe; do
+  command -v "$tool" >/dev/null || die "$tool not found. Manim needs ffmpeg: sudo apt install ffmpeg"
+done
+manim="$ENV_DIR/venv/bin/manim"
+[[ -x "$manim" ]] || die "manim is not installed in $ENV_DIR. Run the diagram-makers setup (setup.sh)."
+
+work="$(mktemp -d)"
+quality="-ql"; [[ -n "$SLUG" ]] && quality="-qm"
+PYTHONPATH="$TOOLS_DIR/kit" "$manim" "$quality" --disable_caching --media_dir "$work" "$script" "$scene" >&2
+mp4="$(find "$work/videos" -name "$scene.mp4" | head -1)"
+[[ -s "$mp4" ]] || die "manim finished but produced no video for scene $scene"
+
+dur="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$mp4")"
+fps="$(awk -v d="$dur" 'BEGIN{ if (d < 1) d = 1; printf "%.4f", 8 / d }')"
+frames="$work/frames.png"
+ffmpeg -v error -y -i "$mp4" -vf "fps=$fps,scale=480:-1,tile=4x2" -frames:v 1 "$frames"
+
+echo "video: $mp4"
+echo "frames: $frames"
+echo "duration: $dur"
+if [[ -n "$SLUG" ]]; then
+  publish "$SLUG" "$mp4" mp4 "$script" scene.py
+fi

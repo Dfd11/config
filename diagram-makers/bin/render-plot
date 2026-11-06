@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Run a matplotlib script and collect its PNG.
+#
+#   render-plot <script.py> [--save <name>] [--out <folder>]
+#   render-plot --kit            print the optional helper library docs and where its examples are
+#
+# The script writes its figure to $PLOT_OUT (with the kit: `from plotkit import *` ... `save(fig)`).
+# Anything the script prints (equations, parameters, sanity checks) is shown.
+#
+# Without --save: prints `preview: <png>` (small, cheap to look at).
+# With --save: renders at full resolution and publishes <name>.png plus the script (<name>.py)
+# into the output folder (./diagrams by default; --out or $DIAGRAM_OUT to change).
+# Re-using a name replaces the earlier files. Prints filename:, path:, source:, replaced:.
+set -euo pipefail
+# shellcheck source=_common.sh
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/_common.sh"
+
+usage() { sed -n '2,/^set -e/p' "$(readlink -f "${BASH_SOURCE[0]}")" | sed '$d; s/^# \{0,1\}//'; }
+parse_flags "$@"
+if [[ "$KIT" == 1 ]]; then print_kit "$TOOLS_DIR/kit/plot"; exit 0; fi
+script="${POSITIONAL[0]:-}"
+if [[ -z "$script" || ! -f "$script" ]]; then
+  echo "usage: render-plot <script.py> [--save <name>] [--out <folder>]" >&2
+  exit 2
+fi
+python="$ENV_DIR/venv/bin/python"
+[[ -x "$python" ]] || die "The Python environment is missing in $ENV_DIR. Run the diagram-makers setup (setup.sh)."
+
+out="${script%.py}-$(date +%s%N).png"
+echo "--- script output ---"
+# previews are small (cheaper to look at); published figures are full resolution
+dpi=110; [[ -n "$SLUG" ]] && dpi=200
+PYTHONPATH="$TOOLS_DIR/kit/plot" PLOT_OUT="$out" PLOT_DPI="$dpi" MPLBACKEND=Agg timeout 120 "$python" "$script"
+echo "--- end script output ---"
+[[ -s "$out" ]] || die "script finished but wrote no image to \$PLOT_OUT"
+
+if [[ -n "$SLUG" ]]; then
+  publish "$SLUG" "$out" png "$script" py
+else
+  echo "preview: $out"
+fi

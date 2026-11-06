@@ -22,6 +22,11 @@ alacritty/Alacritty_files/
 # Container / daemon settings
 !docker/daemon.json
 
+# Diagram makers (agents, skill, render commands). The venv and node_modules live in
+# ~/.local/share/diagram-makers, not here.
+!diagram-makers/**
+diagram-makers/**/__pycache__/
+
 # Shell
 !sixtailfox/**
 !zsh_functions/**

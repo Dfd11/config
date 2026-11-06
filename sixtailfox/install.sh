@@ -50,4 +50,29 @@ for s in "${stages[@]}"; do
   fi
 done
 
+# The diagram makers have optional extras (all off by default). The first row is "skip", so a plain
+# ENTER, or ESC, adds nothing; TAB marks an extra, then ENTER.
+for s in "${stages[@]}"; do
+  if [ "$s" = "diagrams" ]; then
+    opt_rows="$(printf 'none\tSkip - just the diagram makers\n'; "$SETUP" --list-diagrams-opt)"
+    opt_rows="$(printf '%s\n' "$opt_rows" | column -t -s $'\t')"
+    opt_selection="$(printf '%s\n' "$opt_rows" | "$fzf_bin" \
+      --multi --cycle --no-preview \
+      --prompt='diagrams extras> ' \
+      --header='ENTER alone adds nothing. TAB marks an extra, then ENTER. ESC also skips.' \
+      --header-first || true)"
+    if [ -n "$opt_selection" ]; then
+      opts=()
+      while IFS= read -r line; do
+        id="${line%% *}"
+        [ "$id" != "none" ] && opts+=("$id")
+      done <<<"$opt_selection"
+      if [ ${#opts[@]} -gt 0 ]; then
+        extra_args+=("--diagrams-opt=$(IFS=,; echo "${opts[*]}")")
+      fi
+    fi
+    break
+  fi
+done
+
 exec "$SETUP" "${stages[@]}" "${extra_args[@]}"

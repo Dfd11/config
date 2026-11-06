@@ -9,6 +9,9 @@
 #   ~/.config/sixtailfox/setup.sh vscode --vscode-ext=markdown,python,github
 #                                             # vscode extension groups (default: markdown,python,github)
 #   ~/.config/sixtailfox/setup.sh --list-vscode-ext  # print id<TAB>description per group
+#   ~/.config/sixtailfox/setup.sh diagrams --diagrams-opt=latex
+#                                             # diagram makers; optional extras (default: none)
+#   ~/.config/sixtailfox/setup.sh --list-diagrams-opt  # print id<TAB>description per extra
 #
 # Idempotent: safe to re-run. Skips anything already installed.
 set -euo pipefail
@@ -26,7 +29,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 # Catalog of selectable stages, in execution order, with the dependencies
 # each one needs auto-included when picked on its own (e.g. picking just
 # "nvim" also pulls in "apt" for curl/tar/npm).
-STAGE_ORDER=(apt nvim lang cli term shell plugins spotify obsidian vscode)
+STAGE_ORDER=(apt nvim lang cli term shell plugins spotify obsidian vscode diagrams)
 declare -A STAGE_DESC=(
   [apt]="Base apt packages (build tools, ripgrep, fzf deps, clipboard, fonts)"
   [nvim]="Neovim (LazyVim-ready build) + tree-sitter CLI"
@@ -38,6 +41,7 @@ declare -A STAGE_DESC=(
   [spotify]="Spotify (snap)"
   [obsidian]="Obsidian (.deb, latest github release)"
   [vscode]="VS Code (apt repo, Microsoft's official build)"
+  [diagrams]="Diagram makers for Claude Code (mermaid/plot/svg/manim agents + render commands)"
 )
 declare -A STAGE_DEPS=(
   [nvim]="apt"
@@ -48,6 +52,7 @@ declare -A STAGE_DEPS=(
   [plugins]="apt nvim lang"
   [obsidian]="apt"
   [vscode]="apt"
+  [diagrams]="apt"
 )
 
 # VS Code extension groups, selectable independently of stages via
@@ -71,6 +76,13 @@ declare -A VSCODE_EXT_PKGS=(
 )
 DEFAULT_VSCODE_EXT_GROUPS="markdown python github"
 
+# Optional extras for the diagrams stage, off by default (install.sh offers them as a second
+# checklist). Each id is also the flag diagram-makers/setup.sh takes: --latex.
+DIAGRAMS_OPT_ORDER=(latex)
+declare -A DIAGRAMS_OPT_DESC=(
+  [latex]="LaTeX, for formulas inside Manim animations (large: about 770 MB)"
+)
+
 if [ "${1:-}" = "--list" ]; then
   for s in "${STAGE_ORDER[@]}"; do
     printf '%s\t%s\n' "$s" "${STAGE_DESC[$s]}"
@@ -85,12 +97,21 @@ if [ "${1:-}" = "--list-vscode-ext" ]; then
   exit 0
 fi
 
-# Pull --vscode-ext=... out of the args before the rest are treated as stages.
+if [ "${1:-}" = "--list-diagrams-opt" ]; then
+  for o in "${DIAGRAMS_OPT_ORDER[@]}"; do
+    printf '%s\t%s\n' "$o" "${DIAGRAMS_OPT_DESC[$o]}"
+  done
+  exit 0
+fi
+
+# Pull --vscode-ext=... and --diagrams-opt=... out of the args before the rest are treated as stages.
 VSCODE_EXT_GROUPS="$DEFAULT_VSCODE_EXT_GROUPS"
+DIAGRAMS_OPTS=""
 args=()
 for a in "$@"; do
   case "$a" in
     --vscode-ext=*) VSCODE_EXT_GROUPS="${a#--vscode-ext=}"; VSCODE_EXT_GROUPS="${VSCODE_EXT_GROUPS//,/ }" ;;
+    --diagrams-opt=*) DIAGRAMS_OPTS="${a#--diagrams-opt=}"; DIAGRAMS_OPTS="${DIAGRAMS_OPTS//,/ }" ;;
     *) args+=("$a") ;;
   esac
 done
@@ -470,6 +491,16 @@ else
 }
 EOF
 fi
+fi
+
+# ==============================================================================
+# diagrams - Claude Code diagram makers (agents, skill, render-* commands)
+# ==============================================================================
+if want diagrams; then
+info "setting up the diagram makers"
+diagrams_args=(--apt)   # install the missing system packages (sudo), like the stages above
+for o in $DIAGRAMS_OPTS; do diagrams_args+=("--$o"); done
+"$CONFIG/diagram-makers/setup.sh" "${diagrams_args[@]}"
 fi
 
 info "done - remaining manual steps:"
