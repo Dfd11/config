@@ -52,4 +52,5 @@ require("lazy").setup({
       },
     },
   },
+  { "meznaric/key-analyzer.nvim", opts = {} },
 })
